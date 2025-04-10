@@ -32,6 +32,8 @@ void handleRoot() {
     input, button { padding: 10px; margin: 5px; font-size: 16px; border-radius: 5px; }
     button { background-color: #28a745; color: white; border: none; }
     button:hover { background-color: #218838; cursor: pointer; }
+    .stop-btn { background-color: #dc3545; }
+    .stop-btn:hover { background-color: #c82333; }
     .result { margin-top: 15px; font-size: 18px; }
     .formula { font-size: 14px; color: #555; margin-top: 10px; }
   </style>
@@ -60,6 +62,9 @@ void handleRoot() {
     <div class="formula">
       T = 1.1 × R × C
     </div>
+
+    <hr style="margin: 30px 0;">
+    <button onclick="detenerTodo()" class="stop-btn">Detener</button>
   </div>
 
   <script>
@@ -82,6 +87,14 @@ void handleRoot() {
         document.getElementById("resultadoMono").textContent = `Duración del pulso: ${T.toFixed(0)} ms`;
         fetch(`/setmono?time=${T.toFixed(0)}`);
       }
+    }
+
+    function detenerTodo() {
+      fetch('/stop')
+        .then(() => {
+          document.getElementById("resultadoAstable").textContent = "";
+          document.getElementById("resultadoMono").textContent = "";
+        });
     }
   </script>
 </body>
@@ -111,6 +124,16 @@ void handleSetMonoestable() {
   server.send(200, "text/plain", "OK");
 }
 
+void handleStop() {
+  frequency = 0;
+  monoPulseDuration = 0;
+  monoActive = false;
+  digitalWrite(ledAstable, LOW);
+  digitalWrite(outputMono, LOW);
+  Serial.println("Todo detenido.");
+  server.send(200, "text/plain", "Detenido");
+}
+
 void setup() {
   Serial.begin(115200);
   pinMode(ledAstable, OUTPUT);
@@ -124,6 +147,7 @@ void setup() {
   server.on("/", handleRoot);
   server.on("/set", handleSetAstable);
   server.on("/setmono", handleSetMonoestable);
+  server.on("/stop", handleStop);
 
   server.begin();
   Serial.println("Servidor web iniciado");
